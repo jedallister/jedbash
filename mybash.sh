@@ -1,37 +1,23 @@
- #!/bin/bash
-echo "==========================="
-echo "Welcome to Bash Assistant!"
-echo "==========================="
-echo -e "Pick a task:\n1)Check Disk Usage \n2)File count \n3)Search and replace DB\n"
-echo "Which task? [1-3]: "
-read task
+#!/bin/bash
+#This script allows you to migrate files via lftp utility. Make sure it's installed on your server before running the script.
 
-if [ $task -eq 1 ]
-then
-	echo "Checking disk usage..."
-	echo "$(du -ah --max-depth=1 | sort -h)"
-elif [ $task -eq 2 ]
-then
-	echo "Counting files..."
-	echo "$(find . -printf "%h\n" | cut -d/ -f-2 | sort | uniq -c | sort -rn)"
-elif [ $task -eq 3 ]
-then
-    echo -e "What do you want to do?\n1)Do a dry-run first \n2)Proceed with Search & Replace\n"
-    echo "Which task?"
-    read searchreplace
-        if [ $searchreplace -eq 1 ]
-        then
-	       echo "Enter old domain: "
-	       read old
-	       echo "Enter new domain: "
-	       read new
-	       echo "$(wp search-replace $old $new --dry-run)"
-        elif [ $searchreplace -eq 2 ]
-        then
-           echo "Enter old domain: "
-	       read old
-	       echo "Enter new domain: "
-	       read new
-           echo "$(wp search-replace $old $new)"
-        fi
+echo -e "\n*** Migration via LFTP ***\n"
+echo "ftp or sftp:"
+read proto
+echo "Port number:"
+read port
+echo "Enter the source FTP or SFTP host:"
+read ftphost
+echo "Enter the source FTP or SFTP user:"
+read ftpuser
+echo "Enter the source FTP or SFTP password:"
+read -s ftppass
+COMMAND=("lftp" "-u" "'$ftpuser','$ftppass'" "$proto://'$ftphost'" "-p$port" "-e" "set ssl:verify-certificate false")
+
+echo -e "\nPlease copy the mirror command below: \nmirror -cv --parallel=3 --exclude wp-content/cache/ --exclude wp-content/updraft/\n"
+echo ${COMMAND[@]}
+echo -e "\nDo you want to run lftp now? (y/n)"
+read input
+if [ "$input" == "yes" ] || [ "$input" == "y" ];
+then "${COMMAND[@]}"
 fi
